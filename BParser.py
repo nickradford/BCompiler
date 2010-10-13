@@ -8,24 +8,24 @@
 #
 #----------------------------------------------------------#
 
-import ExpressionParser
-import ParserBase
-import Symbol
-import Token
+from ExpressionParser   import *
+from ParserBase         import *
+from Symbol             import *
+from Token              import *
 
-class BParser(Parserbase):
+class BParser(ParserBase):
     #public
     def __init__(self):
-        self.currentOp = None
-	    self.exp = None
-	    self.forwardReferences = None
-	    self.loopStatus = None
-	    self.nextLocation = None
-	    self.nextOp = None
-	    self.operand = None
-	    self.scope = None
-	    self.structureStack = None
-	    self.suppressAdvance = None
+		self.currentOp = None
+		self.exp = None
+		self.forwardReferences = None
+		self.loopStatus = None
+		self.nextLocation = None
+		self.nextOp = None
+		self.operand = None
+		self.scope = None
+		self.structureStack = None
+		self.suppressAdvance = None
     def compile(self, filename):
         pass
     

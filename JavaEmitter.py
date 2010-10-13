@@ -1,4 +1,4 @@
-import Compiler
+from Compiler import *
 
 class Opcode():
     ALOAD=0x19,         # load array reference from variable

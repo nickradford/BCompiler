@@ -1,20 +1,22 @@
 from BParser import *
 
-cono[11][11] =  {
-    #           ** N E X T   O P **
-    #                                                        IF    INT
-    #   (     )     [     ,     ;     {     }     =   ELSE  WHILE  VOID
-    {_xx(),_NO(),_xx(),_xx(),_xx(),_xx(),_xx(),_xx(),_xx(),_xx(),_xx()}, # (         C
-    {_xx(),_xx(),_xx(),_xx(),_NO(),_NO(),_xx(),_xx(),_xx(),_xx(),_xx()}, # )         U
-    {_xx(),_xx(),_xx(),_xx(),_xx(),_xx(),_xx(),_xx(),_xx(),_xx(),_xx()}, # [         R
-    {_xx(),_xx(),_xx(),_xx(),_xx(),_xx(),_xx(),_xx(),_xx(),_xx(),_xx()}, # ,         R
-    {_CA(),_xx(),_AS(),_xx(),_xx(),_xx(),_EB(),_AS(),_xx(),_NO(),_NO()}, # ;         E
-    {_CA(),_xx(),_AS(),_xx(),_xx(),_xx(),_xx(),_AS(),_xx(),_NO(),_NO()}, # {         N
-    {_CA(),_xx(),_AS(),_xx(),_xx(),_xx(),_EB(),_AS(),_NO(),_NO(),_NO()}, # }         T
-    {_xx(),_xx(),_xx(),_xx(),_xx(),_xx(),_xx(),_xx(),_xx(),_xx(),_xx()}, # =
-    {_xx(),_xx(),_xx(),_xx(),_xx(),_NO(),_xx(),_xx(),_xx(),_xx(),_xx()}, # ELSE      O
-    {_CO(),_xx(),_xx(),_xx(),_xx(),_xx(),_xx(),_xx(),_xx(),_xx(),_xx()}, # IF,WHILE  P
-    {_DF(),_xx(),_DE(),_DE(),_DE(),_xx(),_xx(),_DE(),_xx(),_xx(),_xx()}  # INT,VOID
-  	#                                                        IF    INT
-    #   (     )     [     ,     ;     {     }     =   ELSE  WHILE  VOID
-}
+class ActionTable():
+	def __init__(self):
+		bp = BParser
+		self.cono[11][11] =  [
+	    #           ** N E X T   O P **
+	    #                                                                   IF    INT
+	    #    (      )      [      ,      ;      {      }      =    ELSE  WHILE   VOID
+	    [bp._xx,bp._NO,bp._xx,bp._xx,bp._xx,bp._xx,bp._xx,bp._xx,bp._xx,bp._xx,bp._xx], # (         C
+	    [bp._xx,bp._xx,bp._xx,bp._xx,bp._NO,bp._NO,bp._xx,bp._xx,bp._xx,bp._xx,bp._xx], # )         U
+	    [bp._xx,bp._xx,bp._xx,bp._xx,bp._xx,bp._xx,bp._xx,bp._xx,bp._xx,bp._xx,bp._xx], # [         R
+	    [bp._xx,bp._xx,bp._xx,bp._xx,bp._xx,bp._xx,bp._xx,bp._xx,bp._xx,bp._xx,bp._xx], # ,         R
+	    [bp._CA,bp._xx,bp._AS,bp._xx,bp._xx,bp._xx,bp._EB,bp._AS,bp._xx,bp._NO,bp._NO], # ;         E
+	    [bp._CA,bp._xx,bp._AS,bp._xx,bp._xx,bp._xx,bp._xx,bp._AS,bp._xx,bp._NO,bp._NO], # {         N
+	    [bp._CA,bp._xx,bp._AS,bp._xx,bp._xx,bp._xx,bp._EB,bp._AS,bp._NO,bp._NO,bp._NO], # }         T
+	    [bp._xx,bp._xx,bp._xx,bp._xx,bp._xx,bp._xx,bp._xx,bp._xx,bp._xx,bp._xx,bp._xx], # =
+	    [bp._xx,bp._xx,bp._xx,bp._xx,bp._xx,bp._NO,bp._xx,bp._xx,bp._xx,bp._xx,bp._xx], # ELSE      O
+	    [bp._CO,bp._xx,bp._xx,bp._xx,bp._xx,bp._xx,bp._xx,bp._xx,bp._xx,bp._xx,bp._xx], # IF,WHILE  P
+	    [bp._DF,bp._xx,bp._DE,bp._DE,bp._DE,bp._xx,bp._xx,bp._DE,bp._xx,bp._xx,bp._xx]]  # INT,VOID
+	    #                                                                   IF    INT
+	    #    (      )      [      ,      ;      {      }      =    ELSE  WHILE   VOID

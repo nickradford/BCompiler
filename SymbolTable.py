@@ -14,6 +14,7 @@
 
 from MyMap import *
 from Symbol import *
+from Compiler import *
 
 class SymbolTable:
 	def __init__(self):
@@ -29,7 +30,17 @@ class SymbolTable:
 		else:
 			return False
 	def dump(self):                	
-		pass                       	
+		if len(self._locals) + len(self._globals) == 0:
+			Compiler.showMessage("\n***Symbol tables are empty***\n")
+			return
+		Compiler.showMessage("")
+		Compiler.showMessage("***Global Symbol Table***")
+		dumpOneTable(self._globals)
+		Compiler.showMessage("***Local Symbol Table***")
+		dumpOneTable(self._locals)
+		Compiler.showMessage("***End of symbol table dump***")
+		Compiler.showMessage("")
+					         	
 	def get(self, name):           	
 		pass                       	
 	def insert(self, sym):         	
