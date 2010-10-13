@@ -3,7 +3,7 @@ from ParserBase import *
 class ExpressionParser(ParserBase):
 	#Public
 	def __init__(self):
-		super.__init__(self)
+		pass
 	def compileExpression(self):
 		pass
 	def testExpression(self, fileName):

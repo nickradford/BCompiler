@@ -5,14 +5,13 @@ from Token import *
 
 class BScanner(Compiler):
 	def __init__(self, fileName):
-		Compiler.__init__(self)
-		self._lineNumber = None
+		self._lineNumber = 0
 		self._operators = None
 		self._saveToken = None
 		try:
 			self._sourceFile = open(fileName)
 		except:
-			setError("error")
+			Compiler.setError("error")
 			
 	def getLineNumber(self):
 		return self._lineNumber
@@ -23,7 +22,7 @@ class BScanner(Compiler):
     
     #private
 	def _isOctalDigit(self, c):
-		if char >= '0' and char <= '7':
+		if c >= '0' and c <= '7':
 			return True
 	def _readCharacter(self):
 		pass

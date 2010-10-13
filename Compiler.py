@@ -21,31 +21,36 @@ class Compiler:
 	_debugFile = None
 	_symbols = SymbolTable()
     
-    
-	def char2string(self, ch):
-		pass
+	@staticmethod
+	def char2string(ch):
+		return str(ch)
 		
 	@staticmethod
 	def long2string(val):
 		return str(val)
-    
-	def debugOff(self):
+		
+	@staticmethod    
+	def debugOff():
 		Compiler._debugFlag = False
-	
-	def debugOn(self):
+		
+	@staticmethod
+	def debugOn():
 		Compiler._debugFlag = True
 		if Compiler._debugFile is None:
 			Compiler._debugFile = open("run.txt", 'w')
 			if Compiler._debugFile is None:
 				Compiler.setError("Couldn't open debug file 'run.txt'")
-	
-	def debugging(self):
+
+	@staticmethod	
+	def debugging():
 		return Compiler._debugFlag
     
 	@staticmethod
-	def setError(self, error):
+	def setError(error):
 		print error
-	def setWarning(self, warning):
+	
+	@staticmethod
+	def setWarning(warning):
 		pass
 		
 	@staticmethod
@@ -55,6 +60,7 @@ class Compiler:
     # def showMessage(self, message1, message2, message3):
     #         if Compiler._debugFlag is True:
     #             Compiler._debugFile.write("{:<}Current Op: {:10}")
-    
-	def _buildMessage(self, type, string):
+
+	@staticmethod    
+	def _buildMessage(type, string):
 		pass
