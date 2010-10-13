@@ -32,14 +32,14 @@ class SymbolTable:
 			return False
 	def dump(self):                	
 		if len(self._locals) + len(self._globals) == 0:
-			C.C.Compiler.showMessage("\n***Symbol tables are empty***\n")
+			C.Compiler.showMessage("\n***Symbol tables are empty***\n")
 		else:
 			C.Compiler.showMessage("")
-			C.Compiler.showMessage("***Global Symbol Table***")
-			self._dumpOneTable(self._globals)
-			C.Compiler.showMessage("***Local Symbol Table***")
+			C.Compiler.showMessage("***Global Symbol Table***\n")
+			self._dumpOneTable("global")
+			C.Compiler.showMessage("***Local Symbol Table***\n")
 			self._dumpOneTable(self._locals)
-			C.Compiler.showMessage("***End of symbol table dump***")
+			C.Compiler.showMessage("***End of symbol table dump***\n")
 			C.Compiler.showMessage("")
 		return
 					         	
@@ -47,7 +47,6 @@ class SymbolTable:
 		pass                       	
 	def insert(self, sym):         	
 		name = sym.toString()  
-		print str(isinstance(sym, Symbol)) + " was added to the SymbolTable"
 		if sym.getScope() == SymbolScope.GLOBAL and self._globals.defined(name):
 			C.Compiler.setError("Duplicate declaration for " + name)
 		if sym.getScope() == SymbolScope.LOCAL and self._locals.defined(name):
@@ -60,7 +59,14 @@ class SymbolTable:
 		                           	
 	#Private:                      	
 	             	
-	def _dumpOneTable(self, table):	
-		pass
+	def _dumpOneTable(self, table):
+		if table == "global":
+			i = 0
+			for item in self._globals:
+				C.Compiler.showMessage(str(i) + "\t " + item + "\n")
+		else:	
+			i = 0
+			for item in self._locals:
+				C.Compiler.showMessage(str(i) + "\t " + item + "\n")
 
 from Compiler import *                     	
