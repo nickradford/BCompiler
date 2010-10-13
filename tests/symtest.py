@@ -14,5 +14,8 @@ while i< 100:
 	
 Compiler.Compiler.debugOn()
 
+s.clearLocalTable()
 
 s.dump()
+
+print s.get("var2").toString()

@@ -31,7 +31,7 @@ class Symbol(Token):
 	def getSymbolType(self):
 		return self._symbolType
 		
-	def getAdress(self):
+	def getAddress(self):
 		return self._address
 		
 	def setAddress(self, address):

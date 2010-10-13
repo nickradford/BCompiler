@@ -3,7 +3,7 @@ from BParser import *
 class ActionTable():
 	def __init__(self):
 		bp = BParser
-		self.cono[11][11] =  [
+		self.cono =  [
 	    #           ** N E X T   O P **
 	    #                                                                   IF    INT
 	    #    (      )      [      ,      ;      {      }      =    ELSE  WHILE   VOID

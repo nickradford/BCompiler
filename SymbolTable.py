@@ -21,8 +21,10 @@ class SymbolTable:
 	def __init__(self):
 		self._globals = MyMap()             	
 		self._locals = MyMap()
+		
 	def clearLocalTable(self):
-		self._locals.deleteAll();                 	
+		self._locals.deleteAll()
+		               	
 	def defined(self, name):
 		if self._locals.defined(name):
 			return True;
@@ -30,6 +32,7 @@ class SymbolTable:
 			return True
 		else:
 			return False
+			
 	def dump(self):                	
 		if len(self._locals) + len(self._globals) == 0:
 			C.Compiler.showMessage("\n***Symbol tables are empty***\n")
@@ -44,7 +47,14 @@ class SymbolTable:
 		return
 					         	
 	def get(self, name):           	
-		pass                       	
+		if self._locals.defined(name):
+			return self._locals[name]
+		if self._globals.defined(name):
+			return self._globals[name]
+			
+		C.Compiler.setError("Symbol not declared: " + name)
+			
+				
 	def insert(self, sym):         	
 		name = sym.toString()  
 		if sym.getScope() == SymbolScope.GLOBAL and self._globals.defined(name):
@@ -63,10 +73,36 @@ class SymbolTable:
 		if table == "global":
 			i = 0
 			for item in self._globals:
-				C.Compiler.showMessage(str(i) + "\t " + item + "\n")
+				symbol = self._globals[item]
+				addr = C.Compiler.long2string(symbol.getAddress())
+				level = "G"
+				if symbol.getSymbolType() == SymbolType.VARIABLE:
+					symbolType = "VARIABLE"
+				elif symbol.getSymbolType() == SymbolType.ARRAY:
+					symbolType = "ARRAY"
+				elif symbol.getSymbolType() == SymbolType.DEFINED_FUNCTION:
+					symbolType = "DEFINED_FUNCTION"
+				else:
+					symbolType = "FORWARD_FUNCTION"
+				
+				line = symbol.toString() + ", " + addr + ", " + level + ", " + symbolType +"\n"
+				C.Compiler.showMessage(line)
 		else:	
 			i = 0
 			for item in self._locals:
-				C.Compiler.showMessage(str(i) + "\t " + item + "\n")
+				symbol = self._locals[item]
+				addr = C.Compiler.long2string(symbol.getAddress())
+				level = "L"
+				if symbol.getSymbolType() == SymbolType.VARIABLE:
+					symbolType = "VARIABLE"
+				elif symbol.getSymbolType() == SymbolType.ARRAY:
+					symbolType = "ARRAY"
+				elif symbol.getSymbolType() == SymbolType.DEFINED_FUNCTION:
+					symbolType = "DEFINED_FUNCTION"
+				else:
+					symbolType = "FORWARD_FUNCTION"
+				
+				line = symbol.toString() + ", " + addr + ", " + level + ", " + symbolType +"\n"
+				C.Compiler.showMessage(line)
 
 from Compiler import *                     	
