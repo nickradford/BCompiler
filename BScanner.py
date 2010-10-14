@@ -12,7 +12,10 @@ class BScanner(Compiler):
 		self._lastPos = 0
 		self._sourceFile = None
 		try:
-			self._sourceFile = open(fileName)
+			f = open(fileName, 'a')
+			f.write(' ')
+			f.close()
+			self._sourceFile = open(fileName, 'r')
 		except:
 			Compiler.setError("error")
 		tt = TokenType
@@ -50,10 +53,10 @@ class BScanner(Compiler):
 				self._saveToken = None
 			ch = self._readCharacter()
 			try:
-				while re.match("\s", ch):
+				while re.match(r"\s", ch):
 					ch = self._readCharacter()
 			except:
-				print "error... \'" + ch + "\' is not okay"
+				pass
 				
 			if re.match("[a-zA-Z]", ch):
 				tk = self._readSymbol(ch)
@@ -70,11 +73,9 @@ class BScanner(Compiler):
 					Compiler.debugOff()
 				elif tk == "#dump;":
 					Compiler._symbols.dump()
-			elif re.match("'", ch):
-				pass
 			elif re.match("/", ch):
 				pass
-			elif re.match("[<>!=+\-*/(){}\[\],\.;]", ch):
+			elif re.match(r"[<>!=+\-\*/\(\)\{\}\[\],\.;]", ch):
 				tk = ch
 				ch = self._readCharacter()
 				try:
@@ -89,7 +90,7 @@ class BScanner(Compiler):
 				self._saveToken = None
 			return tk
 		except EOFError:
-			return tk
+			print 'eof'
 			
 	def peekToken(self):
 		if self._saveToken is not None:
@@ -105,32 +106,32 @@ class BScanner(Compiler):
 	def _readCharacter(self):
 		self.lastPos = self._sourceFile.tell()
 		ch = self._sourceFile.read(1)
+		if ch == '\n':
+			self._lineNumber += 1
 		if ch != '':
 			return ch
-		else:
-			pass
+		return -1
+				
 	def _readLiteral(self, firstChar):
+		lit = firstChar
 		next = self._readCharacter()
-		if int(firstChar) != 0:
-			base = 10
-		elif int(firstChar) == 0:
-			if next == 'x':
-				base = 16
-				next = self._readCharacter()
-			else:
-				base = 8
+		while True:
+			lit += next
+			next = self._readCharacter()
+			if re.match("\s", next) or next == -1:
+				print 'wspace'
+				break
+		num = 0
 		
-		val = int(firstChar)
-		power = 0
-		try:
-			while re.match("\d", next):
-				val *= base
-				val += int(next)
-				next = self._readCharacter()
-		except:
-			pass
-		self._unreadCharacter();
-		return Token(TokenType.LITERAL, Compiler.long2string(val))
+		if re.match(r"0[0-7]+", lit):
+			num = int(lit, 8)
+		elif re.match(r"[1-9][0-9]+", lit):
+			num = int(lit, 10)
+		elif re.match(r"0[xX][0-9a-fA-F]+", lit):
+			num = int(lit, 16)
+		else:
+			num = 0
+		return Token(TokenType.LITERAL, str(num))
 		
 	def _readSymbol(self, firstChar):
 		pass
