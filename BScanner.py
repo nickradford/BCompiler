@@ -17,7 +17,7 @@ class BScanner(Compiler):
 			f.close()
 			self._sourceFile = open(fileName, 'r')
 		except:
-			Compiler.setError("error")
+			self.setError("error")
 		tt = TokenType
 		op = self._operators
 		op["("] = Token(tt.L_PAREN, "(")
@@ -46,8 +46,8 @@ class BScanner(Compiler):
 	def getLineNumber(self):
 		return self._lineNumber
 	def nextToken(self):
+		tk = ""
 		try:
-			tk = ""
 			if self._saveToken is not None:
 				tk = self._saveToken
 				self._saveToken = None
@@ -68,29 +68,46 @@ class BScanner(Compiler):
 					tk += ch
 					ch = self._readCharacter()
 				if tk == "#debugon;":
-					Compiler.debugOn()
+					self.debugOn()
 				elif tk == "#debugoff;":
-					Compiler.debugOff()
+					self.debugOff()
 				elif tk == "#dump;":
-					Compiler._symbols.dump()
-			elif re.match("/", ch):
-				pass
-			elif re.match(r"[<>!=+\-\*/\(\)\{\}\[\],\.;]", ch):
+					self._symbols.dump()
+			elif re.match(r"[<>!=+\-\*\(\)\{\}\[\],\.;]", ch):
 				tk = ch
 				ch = self._readCharacter()
-				try:
-					if re.match("[<>!=]=", tk + ch):
-						tk += ch
-				except:
-					pass
+				if re.match("[<>!=]=", tk + ch):
+					tk += ch
 				else:
 					self._unreadCharacter()
 				op = self._operators[tk]
 				tk = Token(op.getTokenType(), op.toString())
-				self._saveToken = None
-			return tk
+			elif re.match("/", ch):
+				tk = ch
+				ch = self._readCharacter()
+				if re.match("//", tk + ch):
+					next = self._readCharacter()
+					while next != '\n':
+						print "harp"
+						next = self._readCharacter()
+					tk = self.nextToken()
+				elif re.match(r"/\*", tk +ch):
+					this = self._readCharacter()
+					next = self._readCharacter()
+					while this != '*':
+						this = next
+						next = self._readCharacter()
+					tk = self.nextToken()		
+				else:
+					self._unreadCharacter()
+					op = self._operators[tk]
+					tk = Token(op.getTokenType(), op.toString())
+			self._saveToken = None
 		except EOFError:
-			print 'eof'
+			tk = Token(TokenType.END_FILE, 'EOF')
+		finally:
+			if tk != "" or tk != None:
+				return tk
 			
 	def peekToken(self):
 		if self._saveToken is not None:
@@ -104,7 +121,7 @@ class BScanner(Compiler):
 		if c >= '0' and c <= '7':
 			return True
 	def _readCharacter(self):
-		self.lastPos = self._sourceFile.tell()
+		self._lastPos = self._sourceFile.tell()
 		ch = self._sourceFile.read(1)
 		if ch == '\n':
 			self._lineNumber += 1
@@ -119,7 +136,6 @@ class BScanner(Compiler):
 			lit += next
 			next = self._readCharacter()
 			if re.match("\s", next) or next == -1:
-				print 'wspace'
 				break
 		num = 0
 		
@@ -134,6 +150,16 @@ class BScanner(Compiler):
 		return Token(TokenType.LITERAL, str(num))
 		
 	def _readSymbol(self, firstChar):
-		pass
+		tk = firstChar
+		next = self._readCharacter()
+		while re.match("[a-zA-Z0-9]", next):
+			tk += next
+			next = self._readCharacter()
+		if tk in self._operators:
+			res = self._operators[tk]
+			tk = Token(res.getTokenType(), res.toString())
+		else:
+			tk = Token(TokenType.SYMBOL, tk)
+		return tk
 	def _unreadCharacter(self):
-		self._sourceFile.seek(self.lastPos)
+		self._sourceFile.seek(self._lastPos)

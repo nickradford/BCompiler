@@ -16,8 +16,8 @@ class Status():
 		
 
 class ParserBase(Compiler):
-	def __init__(self, arg):
-		self.arg = arg
+	def __init__(self):
+		self.source = None
 	
 	def pushConstant(self, val):
 		pass	
