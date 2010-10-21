@@ -26,20 +26,15 @@ class ExpressionParser(ParserBase):
 	
 		# Generate code to print the value of an expression
 		# read from the source file
-		#* jvm.emit(GETSTATIC, 6);
+		self.jvm.emit3byte(Opcode.GETSTATIC, 6);
 		self.compileExpression();
-		#* jvm.emit(INVOKEVIRTUAL, 7);
-		#* jvm.emit(RETURN);
-		#* jvm.finish();
+		self.jvm.emit3byte(Opcode.INVOKEVIRTUAL, 7);
+		self.jvm.emit1byte(Opcode.RETURN);
+		self.jvm.finish();
 		
 	def _expression(self):
 		tt = self._expressionToken.getTokenType()
-		if tt == TokenType.SYMBOL:
-			pass
-		elif tt == TokenType.LITERAL:
-			self._term()
-			self._expression2()
-		elif tt == TokenType.L_PAREN:
+		if tt == TokenType.SYMBOL or tt == TokenType.LITERAL or tt == TokenType.L_PAREN:
 			self._term()
 			self._expression2()
 		else:
@@ -53,12 +48,12 @@ class ExpressionParser(ParserBase):
 		if tkn == "+":
 			self._match(TokenType.ADD_OP)
 			self._term()
-			self.showMessage("+")
+			self.jvm.emit1byte(Opcode.IADD)
 			self._expression2()
 		elif tkn == "-":
 			self._match(TokenType.ADD_OP)
 			self._term()
-			self.showMessage("-")
+			self.jvm.emit1byte(Opcode.ISUB)
 			self._expression2()
 		else:
 			pass
@@ -69,7 +64,8 @@ class ExpressionParser(ParserBase):
 		if tt == TokenType.SYMBOL:
 			self.setError("Symbols not allowed")
 		elif tt == TokenType.LITERAL:
-			self.showMessage(self._expressionToken.toString())
+			#self.showMessage(self._expressionToken.toString()) #push constant
+			self.pushConstant(self._expressionToken)
 			self._match(TokenType.LITERAL)
 		elif tt == TokenType.L_PAREN:
 			self._match(TokenType.L_PAREN)
@@ -83,7 +79,7 @@ class ExpressionParser(ParserBase):
 		print "Debug: " + str(self._expressionToken)
 		if isinstance(self._expressionToken, Token):
 			print "\t" + self._expressionToken.toString()
-			self.showMessage("Expression token: " + self._expressionToken.toString())
+			self.showMessage("Expression token: " + self._expressionToken.toString() + "\n")
 	
 	def _match(self, tt):
 		if (self._expressionToken.getTokenType() == tt):
@@ -93,12 +89,9 @@ class ExpressionParser(ParserBase):
 			
 	def _term(self):
 		tt = self._expressionToken.getTokenType()
-		if tt == TokenType.SYMBOL:
-			pass
-		elif tt == TokenType.LITERAL:
+		if tt == TokenType.SYMBOL or tt == TokenType.LITERAL or tt == TokenType.L_PAREN:
 			self._factor()
-		elif tt == TokenType.L_PAREN:
-			pass
+			self._term2()
 		else:
 			self.setError("Syntax error in term at " + self._expressionToken.toString())
 		
@@ -108,12 +101,12 @@ class ExpressionParser(ParserBase):
 		if tkn == "*":
 			self._match(TokenType.MULT_OP)
 			self._factor()
-			self.showMessage("*")
+			self.jvm.emit1byte(Opcode.IMUL)
 			self._term2()
 		elif tkn == "/":
 			self._match(TokenType.MULT_OP)
 			self._factor()
-			self.showMessage("/")
+			self.jvm.emit1byte(Opcode.IDIV)
 			self._term2()
 		else:
 			pass

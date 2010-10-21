@@ -1,0 +1,3 @@
+286: 	bipush  0x10  13
+288: 	iconst_4  0x7
+289: 	sipush  0x11  1  144

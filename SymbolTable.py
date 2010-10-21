@@ -71,7 +71,6 @@ class SymbolTable:
 	             	
 	def _dumpOneTable(self, table):
 		if table == "global":
-			i = 0
 			for item in self._globals:
 				symbol = self._globals[item]
 				addr = C.Compiler.long2string(symbol.getAddress())
@@ -88,7 +87,6 @@ class SymbolTable:
 				line = symbol.toString() + ", " + addr + ", " + level + ", " + symbolType +"\n"
 				C.Compiler.showMessage(line)
 		else:	
-			i = 0
 			for item in self._locals:
 				symbol = self._locals[item]
 				addr = C.Compiler.long2string(symbol.getAddress())

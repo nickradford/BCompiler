@@ -88,7 +88,6 @@ class BScanner(Compiler):
 				if re.match("//", tk + ch):
 					next = self._readCharacter()
 					while next != '\n':
-						print "harp"
 						next = self._readCharacter()
 					tk = self.nextToken()
 				elif re.match(r"/\*", tk +ch):
@@ -102,6 +101,8 @@ class BScanner(Compiler):
 					self._unreadCharacter()
 					op = self._operators[tk]
 					tk = Token(op.getTokenType(), op.toString())
+			elif re.match("'", ch):
+				print "'"
 			self._saveToken = None
 		except EOFError:
 			tk = Token(TokenType.END_FILE, 'EOF')
@@ -134,14 +135,16 @@ class BScanner(Compiler):
 		next = self._readCharacter()
 		while True:
 			lit += next
-			next = self._readCharacter()
-			if re.match("\s", next) or next == -1:
+			if re.match("[\s;]", next) or next == -1:
+				self._unreadCharacter()
 				break
+			next = self._readCharacter()
+			
 		num = 0
 		
 		if re.match(r"0[0-7]+", lit):
 			num = int(lit, 8)
-		elif re.match(r"[1-9][0-9]+", lit):
+		elif re.match(r"[1-9][0-9]*", lit):
 			num = int(lit, 10)
 		elif re.match(r"0[xX][0-9a-fA-F]+", lit):
 			num = int(lit, 16)
