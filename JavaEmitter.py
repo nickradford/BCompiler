@@ -245,12 +245,21 @@ class JavaEmitter(Compiler):
 		self.add(b2)
 		self._pc += 1
 		
+	def emitFFR(self, address, contents):
+		b1 = (param >> 8) & 0xFF
+		b2 = param & 0xFF
+		if self.debugging():
+			dbout = str(hex(address)) + ": \t" + str(hex(b1)) + "  " + str(hex(b2)) + "\n"
+			self.showMessage(dbout)
+		self._code[address] = pack('B', b1)
+		address += 1
+		self._code[address] = pack('B', b2)
 		
 	def finish(self):
 		codeLength = self._pc - 0x11c
 		attrLength = codeLength + 12
 		if attrLength >= 0x10000:
-			self.setError("Programm to large to compile")
+			self.setError("Program to large to compile")
 		
 		self._code[0x11a] = pack('B',(codeLength >> 8) & 0xFF)
 		self._code[0x11b] = pack('B',codeLength & 0xFF)
@@ -274,5 +283,5 @@ class JavaEmitter(Compiler):
 		self._code.append(hexop)
 		
 	def getPC(self):
-		pass
+		return self._pc
 	#private

@@ -37,7 +37,7 @@ class Compiler:
 	def debugOn():
 		Compiler._debugFlag = True
 		if Compiler._debugFile is None:
-			Compiler._debugFile = open("run.txt", 'w')
+			Compiler._debugFile = open("debug.txt", 'w')
 			if Compiler._debugFile is None:
 				Compiler.setError("Couldn't open debug file 'run.txt'")
 

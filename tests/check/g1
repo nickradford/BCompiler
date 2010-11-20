@@ -1,0 +1,9 @@
+#!/usr/bin/bash
+#
+# Run the scanner with two test programs
+#
+rm -f $1-*.txt output.txt
+$1 sample.bg
+mv output.txt $1-1.txt
+$1 t1.bg
+mv output.txt $1-2.txt

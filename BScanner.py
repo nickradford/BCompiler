@@ -47,75 +47,81 @@ class BScanner(Compiler):
 		return self._lineNumber
 	def nextToken(self):
 		tk = ""
+		
+		if self._saveToken is not None:
+			tk = self._saveToken
+			self._saveToken = None
+		ch = self._readCharacter()
 		try:
-			if self._saveToken is not None:
-				tk = self._saveToken
-				self._saveToken = None
-			ch = self._readCharacter()
-			try:
-				while re.match(r"\s", ch):
-					ch = self._readCharacter()
-			except:
-				pass
-				
-			if re.match("[a-zA-Z]", ch):
-				tk = self._readSymbol(ch)
-			elif re.match("[0-9]", ch):
-				tk = self._readLiteral(ch)
-			elif re.match("#", ch):
-				tk = ch
-				while re.match("[^;]", ch):
-					tk += ch
-					ch = self._readCharacter()
-				if tk == "#debugon;":
-					self.debugOn()
-				elif tk == "#debugoff;":
-					self.debugOff()
-				elif tk == "#dump;":
-					self._symbols.dump()
-			elif re.match(r"[<>!=+\-\*\(\)\{\}\[\],\.;]", ch):
-				tk = ch
+			while re.match(r"\s", ch):
 				ch = self._readCharacter()
-				if re.match("[<>!=]=", tk + ch):
-					tk += ch
-				else:
-					self._unreadCharacter()
+		except:
+			pass
+			
+		if re.match("[a-zA-Z]", ch):
+			tk = self._readSymbol(ch)
+		elif re.match("[0-9]", ch):
+			tk = self._readLiteral(ch)
+		elif re.match("#", ch):
+			tk = ch
+			while re.match("[^;]", ch):
+				tk += ch
+				ch = self._readCharacter()
+			if tk == "#debugon;":
+				self.debugOn()
+			elif tk == "#debugoff;":
+				self.debugOff()
+			elif tk == "#dump;":
+				self._symbols.dump()
+		elif re.match(r"[<>!=+\-\*\(\)\{\}\[\],\.;]", ch):
+			tk = ch
+			ch = self._readCharacter()
+			if re.match("[<>!=]=", tk + ch):
+				tk += ch
+			else:
+				self._unreadCharacter()
+			op = self._operators[tk]
+			tk = Token(op.getTokenType(), op.toString())
+		elif re.match("/", ch):
+			tk = ch
+			ch = self._readCharacter()
+			if re.match("//", tk + ch):
+				next = self._readCharacter()
+				while next != '\n':
+					next = self._readCharacter()
+				tk = self.nextToken()
+			elif re.match(r"/\*", tk +ch):
+				this = self._readCharacter()
+				next = self._readCharacter()
+				while this != '*':
+					this = next
+					next = self._readCharacter()
+				tk = self.nextToken()		
+			else:
+				self._unreadCharacter()
 				op = self._operators[tk]
 				tk = Token(op.getTokenType(), op.toString())
-			elif re.match("/", ch):
-				tk = ch
-				ch = self._readCharacter()
-				if re.match("//", tk + ch):
-					next = self._readCharacter()
-					while next != '\n':
-						next = self._readCharacter()
-					tk = self.nextToken()
-				elif re.match(r"/\*", tk +ch):
-					this = self._readCharacter()
-					next = self._readCharacter()
-					while this != '*':
-						this = next
-						next = self._readCharacter()
-					tk = self.nextToken()		
-				else:
-					self._unreadCharacter()
-					op = self._operators[tk]
-					tk = Token(op.getTokenType(), op.toString())
-			elif re.match("'", ch):
-				print "'"
-			self._saveToken = None
-		except EOFError:
-			tk = Token(TokenType.END_FILE, 'EOF')
-		finally:
-			if tk != "" or tk != None:
-				return tk
+		elif re.match("'", ch):
+			ch = self._readCharacter()
+			throwaway = self._readCharacter()
+			tk = Token(TokenType.LITERAL, str(ord(ch)))
+		
+		self._saveToken = None
+		
+		if tk != "" and tk != None:
+			return tk
+		else:
+			None
 			
 	def peekToken(self):
-		if self._saveToken is not None:
-			return self._saveToken
-		else:
-			self._saveToken = self.nextToken()
-			return self._saveToken
+		try:
+			if self._saveToken != None:
+				return self._saveToken
+			else:
+				self._saveToken = self.nextToken()
+				return self._saveToken
+		except:
+			return Token(TokenType.END_FILE, 'EOF')
     
     #private
 	def _isOctalDigit(self, c):
@@ -133,23 +139,24 @@ class BScanner(Compiler):
 	def _readLiteral(self, firstChar):
 		lit = firstChar
 		next = self._readCharacter()
-		while True:
+		while re.match(r"[0-9xXa-fA-F]", next):
 			lit += next
-			if re.match("[\s;]", next) or next == -1:
-				self._unreadCharacter()
-				break
 			next = self._readCharacter()
+		
+		self._unreadCharacter()
 			
 		num = 0
-		
-		if re.match(r"0[0-7]+", lit):
+		if re.match(r"0[xX][0-9a-fA-F]+", lit):
+			literal = lit
+			lit = literal[2:]
+			num = int(lit, 16)
+		elif re.match(r"0[0-7]+", lit):
 			num = int(lit, 8)
 		elif re.match(r"[1-9][0-9]*", lit):
 			num = int(lit, 10)
-		elif re.match(r"0[xX][0-9a-fA-F]+", lit):
-			num = int(lit, 16)
 		else:
 			num = 0
+			#should return error
 		return Token(TokenType.LITERAL, str(num))
 		
 	def _readSymbol(self, firstChar):
@@ -163,6 +170,7 @@ class BScanner(Compiler):
 			tk = Token(res.getTokenType(), res.toString())
 		else:
 			tk = Token(TokenType.SYMBOL, tk)
+		self._unreadCharacter()
 		return tk
 	def _unreadCharacter(self):
 		self._sourceFile.seek(self._lastPos)

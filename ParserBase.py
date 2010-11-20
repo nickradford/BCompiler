@@ -39,6 +39,17 @@ class ParserBase(Compiler):
 				self.jvm.emit2byte(Opcode.BIPUSH, val)
 		elif val <= 32767:
 			self.jvm.emit3byte(Opcode.SIPUSH, val)
+		else:
+			times = val / 32767
+			#print "---", times, " times"
+			self.jvm.emit3byte(Opcode.SIPUSH, 32767)
+			self.jvm.emit3byte(Opcode.SIPUSH, times)
+			self.jvm.emit1byte(Opcode.IMUL)
+			rem = val % 32767
+			#print "---", rem, " rem"
+			self.jvm.emit3byte(Opcode.SIPUSH, rem)
+			self.jvm.emit1byte(Opcode.IADD)
+				
 				
 	def pushConstant(self, operand):
 		val = int(operand.toString())

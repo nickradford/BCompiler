@@ -1,8 +1,7 @@
 from BParser import *
 
 class ActionTable():
-	def __init__(self):
-		bp = BParser
+	def __init__(self, bp):
 		self.cono =  [
 	    #           ** N E X T   O P **
 	    #                                                                   IF    INT

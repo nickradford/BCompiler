@@ -2,12 +2,13 @@ from ParserBase import *
 
 class ExpressionParser(ParserBase):
 	#Public
-	def __init__(self):
+	def __init__(self, bs):
 		ParserBase.__init__(self)
 		#protected
 		self._exprLoopStatus = None
 		#private
 		self._expressionToken = None
+		self.source = bs
 
 	def compileExpression(self):
 		#   This function initiates the compilation of an arithmetic

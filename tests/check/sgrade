@@ -1,0 +1,20 @@
+# Grade scanner
+rm -f *.txt run.class
+echo '*** Test 1'
+bscan t1.b
+awk 'NR > 2 {print $1, $2}' scan.txt > out1.txt
+count=$(wc -l out1.txt | awk '{print $1}')
+echo $count should be 275
+diff out1.txt to1
+echo '*** Test 2'
+bscan t2.b
+awk 'NR > 2 {print $1, $2}' scan.txt > out2.txt
+count=$(wc -l out2.txt | awk '{print $1}')
+echo $count should be 10
+diff out2.txt to2
+echo '*** Test 3'
+bscan t3.b
+awk 'NR > 2 {print $1, $2}' scan.txt > out3.txt
+count=$(wc -l out3.txt | awk '{print $1}')
+echo $count should be 13
+diff out3.txt to3
