@@ -63,9 +63,23 @@ class ExpressionParser(ParserBase):
 		tt = self._expressionToken.getTokenType()
 		
 		if tt == TokenType.SYMBOL:
-			self.setError("Symbols not allowed")
+			sym = self._symbols.get(self._expressionToken.toString())
+			if sym.getSymbolType() == SymbolType.ARRAY:
+				self.jvm.chooseOp(Opcode.ALOAD, Opcode.ALOAD_0, sym.getAddress())
+				nt = self.source.nextToken()
+				if nt.toString() != "[":
+					self.setError("Error: Was expecting an array.")
+				else:
+					nt = self.source.nextToken()
+					if nt.getTokenType() != TokenType.LITERAL:
+						self.setError("Error: Invalid array index.")
+					self.pushConstant(nt)
+				self.jvm.emit1byte(Opcode.IALOAD)
+			else:
+				self.jvm.chooseOp(Opcode.ILOAD, Opcode.ILOAD_0, sym.getAddress())
+			self._match(TokenType.SYMBOL)
 		elif tt == TokenType.LITERAL:
-			#self.showMessage(self._expressionToken.toString()) #push constant
+			self.showMessage("pushed constant: " + self._expressionToken.toString()) #push constant
 			self.pushConstant(self._expressionToken)
 			self._match(TokenType.LITERAL)
 		elif tt == TokenType.L_PAREN:

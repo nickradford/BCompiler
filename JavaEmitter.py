@@ -209,7 +209,10 @@ class JavaEmitter(Compiler):
 		self._opArray[Opcode.SWAP] = "swap";
 		
 	def chooseOp(self, longOp, shortOp, loc):
-		pass
+		if loc < 5:
+			self.emit1byte(shortOp + loc)
+		else:
+			self.emit3byte(longOp, loc)
 		
 	def emit1byte(self, op):
 		if self.debugging():
@@ -245,11 +248,11 @@ class JavaEmitter(Compiler):
 		self.add(b2)
 		self._pc += 1
 		
-	def emitFFR(self, address, contents):
+	def emitFFR(self, address, param):
 		b1 = (param >> 8) & 0xFF
 		b2 = param & 0xFF
 		if self.debugging():
-			dbout = str(hex(address)) + ": \t" + str(hex(b1)) + "  " + str(hex(b2)) + "\n"
+			dbout = str(hex(address)) + "(new): \t" + str(hex(b1)) + "  " + str(hex(b2)) + "\n"
 			self.showMessage(dbout)
 		self._code[address] = pack('B', b1)
 		address += 1

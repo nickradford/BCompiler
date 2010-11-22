@@ -1,12 +1,15 @@
 from Tkinter import *
 import tkFileDialog
 import tkMessageBox
-import os, sys, shlex
+import os, sys, shlex, shutil, time
 from subprocess import Popen, PIPE
 import BParser
 import pdb
 def buildGUI():
-	root = Tk(className=" B Compiler v0.0.1")
+	root = Tk()
+	root.title("B Compiler v0.0.1")
+	root.geometry("408x194-400+300")
+	root.resizable(0,0)
 	
 	fileIOFrame = Frame(root, width="400", height="100")
 	fileIOFrame.grid(row="0", column="0")
@@ -39,9 +42,20 @@ def openFile(self):
 def compile():
 	#try:
 		#pdb.set_trace()
-		bp = BParser.BParser(fn)
+		start = time.time()
+		shutil.copy(fn, "_temp.b")
+		with open("_temp.b", 'a') as f:
+			f.write("#EOF;");
+		
+		bp = BParser.BParser("_temp.b")
 		bp.compile()
+		bp._debugFile.close()
 		runJavaBtn.config(state="normal")
+		os.remove("_temp.b")
+		del bp
+		end = time.time()
+		elapsed = end - start
+		console.insert(END, "Program successfully compiled in " + str(int(10 * elapsed)) + " seconds.\n")
 	#except:
 		#console.insert(END, "Oops")
 	

@@ -48,9 +48,10 @@ class BScanner(Compiler):
 	def nextToken(self):
 		tk = ""
 		
-		if self._saveToken is not None:
+		if self._saveToken != None:
 			tk = self._saveToken
 			self._saveToken = None
+			return tk
 		ch = self._readCharacter()
 		try:
 			while re.match(r"\s", ch):
@@ -58,6 +59,9 @@ class BScanner(Compiler):
 		except:
 			pass
 			
+		if ch == "":
+			print "Empty string"
+		
 		if re.match("[a-zA-Z]", ch):
 			tk = self._readSymbol(ch)
 		elif re.match("[0-9]", ch):
@@ -65,14 +69,19 @@ class BScanner(Compiler):
 		elif re.match("#", ch):
 			tk = ch
 			while re.match("[^;]", ch):
-				tk += ch
 				ch = self._readCharacter()
+				tk += ch
 			if tk == "#debugon;":
+				print "debugging"
 				self.debugOn()
+				
 			elif tk == "#debugoff;":
 				self.debugOff()
 			elif tk == "#dump;":
 				self._symbols.dump()
+			elif tk == "#EOF;":
+				return Token(TokenType.END_FILE, 'EOF')
+			return self.nextToken();
 		elif re.match(r"[<>!=+\-\*\(\)\{\}\[\],\.;]", ch):
 			tk = ch
 			ch = self._readCharacter()
@@ -82,6 +91,7 @@ class BScanner(Compiler):
 				self._unreadCharacter()
 			op = self._operators[tk]
 			tk = Token(op.getTokenType(), op.toString())
+			print tk.toString()
 		elif re.match("/", ch):
 			tk = ch
 			ch = self._readCharacter()
@@ -105,6 +115,9 @@ class BScanner(Compiler):
 			ch = self._readCharacter()
 			throwaway = self._readCharacter()
 			tk = Token(TokenType.LITERAL, str(ord(ch)))
+		else:
+			print "EOF-EOF-EOF"
+			tk = self._readEOF()
 		
 		self._saveToken = None
 		
@@ -114,14 +127,9 @@ class BScanner(Compiler):
 			None
 			
 	def peekToken(self):
-		try:
-			if self._saveToken != None:
-				return self._saveToken
-			else:
-				self._saveToken = self.nextToken()
-				return self._saveToken
-		except:
-			return Token(TokenType.END_FILE, 'EOF')
+		if self._saveToken == None:
+			self._saveToken = self.nextToken()
+		return self._saveToken
     
     #private
 	def _isOctalDigit(self, c):
@@ -171,6 +179,9 @@ class BScanner(Compiler):
 		else:
 			tk = Token(TokenType.SYMBOL, tk)
 		self._unreadCharacter()
+		return tk
+	def _readEOF(self):
+		tk = Token(TokenType.END_FILE, 'EOF')
 		return tk
 	def _unreadCharacter(self):
 		self._sourceFile.seek(self._lastPos)

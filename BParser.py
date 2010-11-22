@@ -54,8 +54,9 @@ class BParser(ParserBase):
 		self.scope = SymbolScope.GLOBAL
 		self.structureStack = []
 		self.suppressAdvance = False
-		self.jvm = JavaEmitter()
+		self.jvm = self.exp.jvm
 		self.AC = ActionTable(self)
+		self.advances = 0
 		
 		#print self.currentOp, self.operand, self.nextOp, "1"
 	
@@ -66,22 +67,29 @@ class BParser(ParserBase):
 	#		self.advance()
 	def compile(self):
 		#self.bs.debugOn()
-		main = Symbol("Main", SymbolType.FORWARD_FUNCTION, SymbolScope.GLOBAL)
-		self.bs._symbols.insert(main)
-		
-		write = Symbol("write", SymbolType.DEFINED_FUNCTION, SymbolScope.GLOBAL)
-		self.bs._symbols.insert(write)
-		if self.bs.debugging():
-			self.bs._symbols.dump()
-		self.nextOp = self.bs.nextToken()
-		if self.nextOp.toString() == "void":
-			self.jvm.emit3byte(Opcode.GOTO, 0)
-		while self.loopStatus != Status.EXIT:
-			print ".",
-			self.advance()
-			self._generate(self.currentOp, self.nextOp)
-		self.fillForwardReferences()
-		self.jvm.finish()
+		#try:
+			main = Symbol("Main", SymbolType.FORWARD_FUNCTION, SymbolScope.GLOBAL)
+			self.bs._symbols.insert(main)
+			
+			write = Symbol("write", SymbolType.DEFINED_FUNCTION, SymbolScope.GLOBAL)
+			self.bs._symbols.insert(write)
+			if self.bs.debugging():
+				self.bs._symbols.dump()
+			self.nextOp = self.bs.nextToken()
+			print self.nextOp
+			if self.nextOp.toString() == "void":
+				sym = self.bs._symbols.get("Main")
+				self.saveForwardReference(sym, self.jvm.getPC())
+				self.jvm.emit3byte(Opcode.GOTO, 0)
+			while self.loopStatus != Status.EXIT:
+				print ".",
+				self.advance()
+				self._generate(self.currentOp, self.nextOp)
+			self.fillForwardReferences()
+			self.jvm.finish()
+		#except:
+			#self._debugFile.close()
+			#pass
     
     
     
@@ -89,7 +97,6 @@ class BParser(ParserBase):
 	
 	def advance(self):
 		#if self.suppressAdvance ? self.supressAdvance = False : pass
-		
 		
 	  	if self.suppressAdvance == True:
 	  		self.suppressAdvance = False
@@ -118,26 +125,34 @@ class BParser(ParserBase):
 				nt = Token(TokenType.END_FILE, 'EOF')
 		 	
 		self.nextOp = nt
-			
-		if self.bs.debugging():
-			msg = self.currentOp.toString() + " "
-			msg += self.operand.toString() + " "
-			msg += self.nextOp.toString() + " "
-			self.bs.showMessage(msg)
 		
-		
-		
-	
+		print self.advances, self.currentOp.toString(), self.operand, self.nextOp.toString()
+		self.advances += 1
+	  #try:	
+	  #	if self.bs.debugging():
+	  #		msg = self.currentOp.toString() + " "
+	  #		msg += self.operand.toString() + " "
+	  #		msg += self.nextOp.toString() + " "
+	  #		self.bs.showMessage(msg)
+	  #except:
+	  #	self.bs.showMessage("")
 	
 	def compileExpression(self):
-	    self.nextOp = self.exp.compileExpression()
+		print "compiling expression"
+		self.nextOp = self.exp.compileExpression()
+		
 	def fillAddress(self, referenceLoc, targetLoc):
 		targetLoc = targetLoc - referenceLoc
-		self.jvm.emitFFR()
+		self.jvm.emitFFR(referenceLoc + 1, targetLoc)
+		
 	def saveForwardReference(self, symbol, address):
 		fr = ForwardRef(symbol, address)
 		self.forwardReferences.append(fr)
-	
+		
+   	def fillForwardReferences(self):
+		while len(self.forwardReferences) != 0:
+			ref = self.forwardReferences.pop()
+			self.fillAddress(ref.instrLocation, ref.reference.getAddress())	
 	#private
 	def _compileCondition(self):
 		self.compileExpression()
@@ -157,10 +172,7 @@ class BParser(ParserBase):
 		if relstr == "!=":
 			self.jvm.emit3byte(Opcode.IF_ICMPEQ, 0)
 		
-	def fillForwardReferences(self):
-	    while len(self.forwardReferences) != 0:
-			ref = self.forwardReferences.pop()
-			self.fillAddress(ref.instrLocation, ref.reference.getAddress())
+
 			
 	def _generate(self, cOp, nOp):
 		cOpTT = cOp.getTokenType()
@@ -173,68 +185,79 @@ class BParser(ParserBase):
 	# code generators
 	# ASsignment
 	def _AS(self):
-		if self.nextOp == TokenType.L_BRACKET:
-			sym = self.symbols.get(operand.toString())
-			self/jvm.chooseOp(ALOAD, ALOAD_1, sym.getAddress())
-			sub = self.compileExpression()
-			val = self.compileExpression()
-			self.jvm.emit(IASTORE)
+		print "AS()"
+		print self.nextOp.toString(), "ASSIGNMENT&*&*&"
+		if self.nextOp.getTokenType() == TokenType.L_BRACKET:
+			sym = self.bs._symbols.get(self.operand.toString())
+			self.jvm.chooseOp(Opcode.ALOAD, Opcode.ALOAD_0, sym.getAddress())
+			self.compileExpression()
+			self.advance()
+			self.compileExpression()
+			self.jvm.emit1byte(Opcode.IASTORE)
 
 		else:
-			sym = self.symbols.get(operand.toString())
+			sym = self.bs._symbols.get(self.operand.toString())
 			val = self.compileExpression()
-			self.jvm.chooseOp(ISTORE, ISTORE_0, sym.getAddress())
+			print self.currentOp.toString(), self.operand.toString(), self.nextOp.toString()
+			self.jvm.chooseOp(Opcode.ISTORE, Opcode.ISTORE_0, sym.getAddress())
 
 	
 	# CAll function		
 	def _CA(self):
-		print "calling a function"
+		print "CA()"
+		print "calling a function: ", self.currentOp.toString(), self.operand.toString(), self.nextOp.toString()
 		if self.operand.toString() == "write":
 			print "calling the write function"
 			self.jvm.emit3byte(Opcode.GETSTATIC, 6)
 			self.compileExpression()
 			self.jvm.emit3byte(Opcode.INVOKEVIRTUAL, 7)
 		else:
-			if not self.symbols.defined(operand.toString()):
+			if self.bs._symbols.defined(self.operand.toString()) == False:
+				print "function not defined"
 				sym = Symbol(self.operand.toString(), SymbolType.FORWARD_FUNCTION, self.scope)
-				self.symbols.insert(sym)
+				self.bs._symbols.insert(sym)
 			
-			sym = self.symbols.get(self.operand.toString())
+			sym = self.bs._symbols.get(self.operand.toString())
 			if sym.getSymbolType() == SymbolType.FORWARD_FUNCTION:
 				self.saveForwardReference(sym, self.jvm.getPC())
-				self.jvm.emit3byte(Opcode.GOTO, 0) #jsr
+				self.jvm.emit3byte(Opcode.JSR, 0) #jsr
 			elif sym.getSymbolType() == SymbolType.DEFINED_FUNCTION:
-				self.jvm.emit3byte(Opcode.GOTO, sym.getAddress() - self.jvm.getPC()) #jsr
+				self.jvm.emit3byte(Opcode.JSR, sym.getAddress() - self.jvm.getPC()) #jsr
 		
 	# COndition
 	def _CO(self):
-		if self.nextOp.toString() == "if":
+		print "CO()"
+		if self.currentOp.toString() == "if":
 			struc = Structure(StructureType.IF)
-			self.compileCondition()
+			self._compileCondition()
 			struc.jumpLoc = self.jvm.getPC() - 3
 			self.structureStack.append(struc)
-		elif self.nextOp.toString() == "while":
+			print "Pushed IF Structure"
+		elif self.currentOp.toString() == "while":
 			struc = Structure(StructureType.WHILE)
 			struc.conditionLoc = self.jvm.getPC()
 			self.structureStack.append(struc)
-			self.compileCondition()
-			struc.jumpLoc = self.jvm.getPC() - 3			
+			self._compileCondition()
+			struc.jumpLoc = self.jvm.getPC() - 3	
+			print "Pushed WHILE structure"		
 		
 		pass #save position of conditional jump at end of the cond as jumpLoc (pc - 3)
 	
 	# DEclaration
 	def _DE(self):
-		self.supressAdvance = True
+		print "DE()"
+		self.suppressAdvance = True
 		print "declaring a variable..."
 		while self.nextOp.toString() != ";":
-			self.advance()
+			print self.operand.toString(), "SYMBOL!!!"
 			sym = Symbol(self.operand.toString(), None, self.scope)
+			self.advance()
 			sym.setAddress(self.nextLocation)
 			if self.nextOp.toString() == "[":
 				sym.setSymbolType(SymbolType.ARRAY)
 				self.advance() # co = '[', no = ']'
 				self.pushConstant(self.operand)
-				sub = self.operand
+				size = self.operand.toString()
 				self.jvm.emit2byte(Opcode.NEWARRAY, 10)
 				sym.setAddress(self.nextLocation)
 				self.jvm.chooseOp(Opcode.ASTORE, Opcode.ASTORE_0, sym.getAddress())
@@ -246,23 +269,24 @@ class BParser(ParserBase):
 					
 					self.advance() #co = '{', no = ','
 					arr = []
-					while self.nextOp.toString() != "}":
+					while self.nextOp.toString() != ";":
+						print "Array Declaration :", self.operand.toString()
 						arr.append(self.operand)
 						self.advance() 
-					if len(arr) > sub:
+					if len(arr) > size:
 						self.setError("Syntax Error: Array Subscript exceeded")
 					else:
 						i = 0
 						for val in arr:
 							self.jvm.chooseOp(Opcode.ALOAD, Opcode.ALOAD_0, sym.getAddress())
-							self.pushConstant(i)
+							self.pushConstantInt(i)
 							self.pushConstant(val)
 							self.jvm.emit1byte(Opcode.IASTORE)
 							i += 1							
 							
 			else: #if not an array
 				sym.setSymbolType(SymbolType.VARIABLE)
-				sym.setAddress(self.nextLocation)
+				#sym.setAddress(self.nextLocation)
 				self.advance()
 				self.pushConstant(self.operand)
 				self.jvm.chooseOp(Opcode.ISTORE, Opcode.ISTORE_0, sym.getAddress())
@@ -271,7 +295,7 @@ class BParser(ParserBase):
 				#do variable declaration things
 			self.bs._symbols.insert(sym)
 			self.nextLocation += 1
-		try:	
+		try:
 			if self.scope == SymbolScope.GLOBAL and self.bs.peekToken().toString() != "int":
 				self.jvm.emit3byte(Opcode.JSR, 0)
 		except:			
@@ -279,25 +303,30 @@ class BParser(ParserBase):
 	
 	# Define Function
 	def _DF(self):
+		print "DF()"
 		self.scope = SymbolScope.LOCAL
-		if self.bs._symbols.defined(self.operand):
-			sym = self.bs._symbols.get(self.operand)
+		if self.bs._symbols.defined(self.operand.toString()):
+			sym = self.bs._symbols.get(self.operand.toString())
 			sym.setSymbolType(SymbolType.DEFINED_FUNCTION)
 		else:
 			sym = Symbol(self.operand.toString(), SymbolType.DEFINED_FUNCTION, SymbolScope.GLOBAL)
+			self.bs._symbols.insert(sym)
 		sym.setAddress(self.jvm.getPC())
 		
 		if sym.toString() == "Main":
-			print "Main Function"
+			print "Main Function Definition"
 			struct = Structure(StructureType.MAIN)
 		else:
 			struct = Structure(StructureType.FUNCTION)
-		print self.structureStack
+			print "Function Definition"
 		self.structureStack.append(struct)
-		print "structure pushed"
+		print self.structureStack
+		print len(self.structureStack), ": structure pushed, "
 	
 	# End Block
 	def _EB(self):
+		print "EB()"
+		#print "END BLOCK: ", self.currentOp.toString(), self.operand.toString(), self.nextOp.toString()
 		struct = self.structureStack.pop()
 		if struct.isOfType(StructureType.ELSE):
 			self.fillAddress() #not done
@@ -305,31 +334,40 @@ class BParser(ParserBase):
 			if self.bs.peekToken().toString() == "else":
 				pstru = Structure(StructureType.ELSE)
 				pstru.jumpLoc = self.jvm.getPC()
-				#emit code to jump past false part
-			self.fillAddress()
+				self.structureStack.append(pstru)
+	    		#emit code to jump past false part
+			self.fillAddress(struct.jumpLoc, self.jvm.getPC())
 		elif struct.isOfType(StructureType.FUNCTION):
 			self.scope = SymbolScope.GLOBAL
-			self._symbols.clearLocalTable()
+			self.bs._symbols.clearLocalTable()
 			#generate code to save the return address in loc0 and emit instruction
 			#return to the calling point
-			#emit ret
+			self.jvm.emit1byte(Opcode.ASTORE_0)
+			self.jvm.emit2byte(Opcode.RET, 0)
 			if self.bs.peekToken().getTokenType() == TokenType.END_FILE:
 				self.loopStatus = Status.EXIT
 		elif struct.isOfType(StructureType.MAIN):
 			self.scope = SymbolScope.GLOBAL
-			self._symbols.clearLocalTable()
+			self.bs._symbols.clearLocalTable()
 			#emit the instruction to terminate the program
 			#emit return
+			self.jvm.emit1byte(Opcode.RETURN)
+			print self.bs.peekToken().toString(), "PEEK TOKEN^@#*&^@#*^"
 			if self.bs.peekToken().getTokenType() == TokenType.END_FILE:
 				self.loopStatus = Status.EXIT
+				
 		del struct
+		#self.jvm.emit1byte(Opcode.RETURN)
+		#self.loopStatus = Status.EXIT
+	
 	# No Op
 	def _NO(self):
-		#derp
+		print "NO()"
 		pass
 	
 	# Error
 	def _xx(self):
+		print "XX()"
 		pass
 #parsing table
     

@@ -1,5 +1,26 @@
+0x11c: 	goto  0xa7  0x0  0x0
+0x11f: 	getstatic  0xb2  0x0  0x6
+Expression token: 1
+pushed constant: 1
+0x122: 	iconst_1  0x4
+Expression token: )
+ 0x123: 	invokevirtual  0xb6  0x0  0x7
+Expression token: 1
+pushed constant: 1
+0x126: 	iconst_1  0x4
+Expression token: <
+Expression token: )
+0x127: 	getstatic  0xb2  0x0  0x6
+Expression token: 2
+pushed constant: 2
+0x12a: 	iconst_2  0x5
+Expression token: )
+0x12b: 	invokevirtual  0xb6  0x0  0x7
+0x125(new): 	0x0  0xa
+0x12e: 	return  0xb1
 ***Global Symbol Table***
 write, -1, G, DEFINED_FUNCTION
-Main, -1, G, FORWARD_FUNCTION
+Main, 287, G, DEFINED_FUNCTION
 ***Local Symbol Table***
 ***End of symbol table dump***
+0x11d(new): 	0x0  0x3
