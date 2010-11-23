@@ -1,5 +1,0 @@
-***Global Symbol Table***
-write, -1, G, DEFINED_FUNCTION
-Main, -1, G, FORWARD_FUNCTION
-***Local Symbol Table***
-***End of symbol table dump***

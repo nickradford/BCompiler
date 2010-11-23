@@ -1,3 +1,0 @@
-h1. BCompiler
-
-BCompiler is a compiler built in Python, which will convert a .b file to Java Bytecode
