@@ -147,6 +147,7 @@ class BParser(ParserBase):
 		
 	def saveForwardReference(self, symbol, address):
 		fr = ForwardRef(symbol, address)
+		print fr.reference.toString(), " SAVE FR:::"
 		self.forwardReferences.append(fr)
 		
    	def fillForwardReferences(self):
@@ -156,9 +157,11 @@ class BParser(ParserBase):
 	#private
 	def _compileCondition(self):
 		self.compileExpression()
-		relop = self.bs.nextToken()
+		relop = self.nextOp
 		self.compileExpression()
 		relstr = relop.toString()
+		print "RELOP!!!1 :", relop
+		print "RELSTRING!!!", relstr
 		if relstr == "<":
 			self.jvm.emit3byte(Opcode.IF_ICMPGE, 0)	#do you just emit the i_cmp opcode? (what about the offset)
 		if relstr == ">":
@@ -236,9 +239,9 @@ class BParser(ParserBase):
 		elif self.currentOp.toString() == "while":
 			struc = Structure(StructureType.WHILE)
 			struc.conditionLoc = self.jvm.getPC()
-			self.structureStack.append(struc)
 			self._compileCondition()
-			struc.jumpLoc = self.jvm.getPC() - 3	
+			struc.jumpLoc = self.jvm.getPC() - 3
+			self.structureStack.append(struc)	
 			print "Pushed WHILE structure"		
 		
 		pass #save position of conditional jump at end of the cond as jumpLoc (pc - 3)
@@ -336,6 +339,9 @@ class BParser(ParserBase):
 				pstru.jumpLoc = self.jvm.getPC()
 				self.structureStack.append(pstru)
 	    		#emit code to jump past false part
+			self.jvm.emitFFR(struct.jumpLoc + 1, self.jvm.getPC() - struct.jumpLoc)
+		elif struct.isOfType(StructureType.WHILE):
+			self.jvm.emit3byte(Opcode.GOTO, struct.conditionLoc - self.jvm.getPC())
 			self.fillAddress(struct.jumpLoc, self.jvm.getPC())
 		elif struct.isOfType(StructureType.FUNCTION):
 			self.scope = SymbolScope.GLOBAL
